@@ -1,0 +1,26 @@
+{
+  "name": "eosio-statereceiver",
+  "version": "1.0.0",
+  "description": "State receiver modeule for connecting to the state history plugin",
+  "main": "statereceiver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eosdac/statereceiver.git"
+  },
+  "author": "Michael Yeates",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/eosdac/statereceiver/issues"
+  },
+  "homepage": "https://github.com/eosdac/statereceiver#readme",
+  "dependencies": {
+    "eosjs": "./eosjs",
+    "mongodb": "^3.1.13",
+    "text-encoding": "^0.7.0",
+    "ws": "^6.1.3",
+    "zlib": "^1.0.5"
+  }
+}
