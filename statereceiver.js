@@ -9,6 +9,7 @@ class StateReceiver {
         this.delta_handlers = []
         this.done_handlers = []
         this.progress_handlers = []
+        this.connected_handlers = []
 
         // console.log(config)
 
@@ -42,6 +43,10 @@ class StateReceiver {
         this.progress_handlers.push(h)
     }
 
+    registerConnectedHandler(h){
+        this.connected_handlers.push(h)
+    }
+
     status(){
         const start = this.start_block
         const end = this.end_block
@@ -63,10 +68,15 @@ class StateReceiver {
 
         this.connection = new Connection({
             socketAddress: this.config.eos.wsEndpoint,
+            socketAddresses: this.config.eos.wsEndpoints,
             receivedAbi: (() => {
                 this.requestBlocks()
+
+                this.connected_handlers.map(((handler) => {
+                    handler(this.connection)
+                }).bind(this))
             }).bind(this),
-            receivedBlock: this.receivedBlock.bind(this),
+            receivedBlock: this.receivedBlock.bind(this)
         });
     }
 
