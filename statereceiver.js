@@ -72,7 +72,7 @@ class StateReceiver {
             receivedAbi: (() => {
                 this.requestBlocks()
 
-                this.connected_handlers.map(((handler) => {
+                this.connected_handlers.forEach(((handler) => {
                     handler(this.connection)
                 }).bind(this))
             }).bind(this),
@@ -157,7 +157,7 @@ class StateReceiver {
         }
 
         if (deltas && deltas.length){
-            this.delta_handlers.map(((handler) => {
+            this.delta_handlers.forEach(((handler) => {
                 if (this.mode === 0){
                     handler.processDelta(block_num, deltas, this.connection.types)
                 }
@@ -168,7 +168,7 @@ class StateReceiver {
         }
 
         if (traces){
-            this.trace_handlers.map((handler) => {
+            this.trace_handlers.forEach((handler) => {
                 if (this.mode === 0){
                     handler.processTrace(block_num, traces)
                 }
@@ -180,12 +180,12 @@ class StateReceiver {
 
         if (this.current_block === this.end_block -1){
             this.complete = true
-            this.done_handlers.map((handler) => {
+            this.done_handlers.forEach((handler) => {
                 handler()
             })
         }
 
-        this.progress_handlers.map((handler) => {
+        this.progress_handlers.forEach((handler) => {
             handler(100 * ((block_num - this.start_block) / this.end_block))
         })
 
