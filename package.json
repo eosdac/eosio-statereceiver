@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/eosdac/statereceiver.git"
+    "url": "git+https://github.com/eosdac/eosio-statereceiver.git"
   },
   "author": "Michael Yeates",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/eosdac/statereceiver/issues"
+    "url": "https://github.com/eosdac/eosio-statereceiver/issues"
   },
-  "homepage": "https://github.com/eosdac/statereceiver#readme",
+  "homepage": "https://github.com/eosdac/eosio-statereceiver#readme",
   "dependencies": {
     "eosjs": "./eosjs",
     "mongodb": "^3.1.13",
