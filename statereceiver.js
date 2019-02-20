@@ -1,14 +1,14 @@
-const MongoClient = require('mongodb').MongoClient
 const { Connection } = require("./connection")
 
 
 class StateReceiver {
     /* mode 0 = serial, 1 = parallel */
-    constructor({ startBlock = 0, endBlock = 0xffffffff, config, mode = 0 }){
+    constructor({ startBlock = 0, endBlock = 0xffffffff, config, mode = 0, irreversibleOnly = false }){
         this.trace_handlers = []
         this.delta_handlers = []
         this.done_handlers = []
         this.progress_handlers = []
+        this.irreversible_only = irreversibleOnly
 
         // console.log(config)
 
@@ -42,6 +42,10 @@ class StateReceiver {
         this.progress_handlers.push(h)
     }
 
+    registerForkHandler(h){
+        this.fork_handlers.push(h)
+    }
+
     status(){
         const start = this.start_block
         const end = this.end_block
@@ -52,14 +56,6 @@ class StateReceiver {
 
     async start(){
         this.complete = false
-
-        try {
-            this.db = await this.connectDb()
-        }
-        catch (e){
-            console.error(e.message)
-        }
-
 
         this.connection = new Connection({
             socketAddress: this.config.eos.wsEndpoint,
@@ -81,25 +77,10 @@ class StateReceiver {
         console.log(`Destroying (TODO)`)
     }
 
-    async connectDb(){
-        if (this.config.mongo){
-            return new Promise((resolve, reject) => {
-                MongoClient.connect(this.config.mongo.url, {useNewUrlParser: true}, ((err, client) => {
-                    if (err){
-                        reject(err)
-                    }
-                    else {
-                        resolve(client.db(this.config.mongo.dbName))
-                    }
-                }).bind(this))
-            })
-        }
-    }
-
     async requestBlocks(){
         try {
             await this.connection.requestBlocks({
-                irreversibleOnly:false,
+                irreversibleOnly: this.irreversible_only,
                 start_block_num: this.start_block,
                 end_block_num: this.end_block,
                 have_positions:[],
@@ -114,11 +95,9 @@ class StateReceiver {
     }
 
     async handleFork(block_num){
-        if (this.db){
-            const trace_collection = this.config.mongo.traceCollection
-            const col = this.db.collection(trace_collection)
-            return col.deleteMany({block_num:{$gte:block_num}})
-        }
+        this.fork_handlers.forEach((h) => {
+            h(block_num)
+        })
     }
 
     async receivedBlock(response, block, traces, deltas) {
@@ -147,7 +126,7 @@ class StateReceiver {
         }
 
         if (deltas && deltas.length){
-            this.delta_handlers.map(((handler) => {
+            this.delta_handlers.forEach(((handler) => {
                 if (this.mode === 0){
                     handler.processDelta(block_num, deltas, this.connection.types)
                 }
@@ -158,7 +137,7 @@ class StateReceiver {
         }
 
         if (traces){
-            this.trace_handlers.map((handler) => {
+            this.trace_handlers.forEach((handler) => {
                 if (this.mode === 0){
                     handler.processTrace(block_num, traces)
                 }
@@ -179,8 +158,6 @@ class StateReceiver {
             handler(100 * ((block_num - this.start_block) / this.end_block))
         })
 
-        // const state_col = this.db.collection(this.state_collection)
-        // state_col.updateOne({name:'head_block'}, {$set:{block_num}}, {upsert:true})
 
     } // receivedBlock
 }
