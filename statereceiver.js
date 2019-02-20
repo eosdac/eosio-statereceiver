@@ -8,6 +8,7 @@ class StateReceiver {
         this.delta_handlers = []
         this.done_handlers = []
         this.progress_handlers = []
+        this.connected_handlers = []
         this.irreversible_only = irreversibleOnly
 
         // console.log(config)
@@ -46,6 +47,10 @@ class StateReceiver {
         this.fork_handlers.push(h)
     }
 
+    registerConnectedHandler(h){
+        this.connected_handlers.push(h)
+    }
+
     status(){
         const start = this.start_block
         const end = this.end_block
@@ -59,10 +64,15 @@ class StateReceiver {
 
         this.connection = new Connection({
             socketAddress: this.config.eos.wsEndpoint,
+            socketAddresses: this.config.eos.wsEndpoints,
             receivedAbi: (() => {
                 this.requestBlocks()
+
+                this.connected_handlers.forEach(((handler) => {
+                    handler(this.connection)
+                }).bind(this))
             }).bind(this),
-            receivedBlock: this.receivedBlock.bind(this),
+            receivedBlock: this.receivedBlock.bind(this)
         });
     }
 
@@ -149,12 +159,12 @@ class StateReceiver {
 
         if (this.current_block === this.end_block -1){
             this.complete = true
-            this.done_handlers.map((handler) => {
+            this.done_handlers.forEach((handler) => {
                 handler()
             })
         }
 
-        this.progress_handlers.map((handler) => {
+        this.progress_handlers.forEach((handler) => {
             handler(100 * ((block_num - this.start_block) / this.end_block))
         })
 
