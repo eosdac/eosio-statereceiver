@@ -4,10 +4,13 @@ const { TextDecoder, TextEncoder } = require('text-encoding');
 const zlib = require('zlib');
 
 class Connection {
-    constructor({ socketAddresses, receivedAbi, receivedBlock  }) {
+    constructor({ socketAddresses, socketAddress, receivedAbi, receivedBlock  }) {
         this.receivedAbi = receivedAbi;
         this.receivedBlock = receivedBlock;
         this.socketAddresses = socketAddresses;
+        if (typeof socketAddress == 'string'){
+            this.socketAddresses = [socketAddress]
+        }
 
         this.abi = null;
         this.types = null;
@@ -17,7 +20,7 @@ class Connection {
         this.socket_index = 0;
         this.currentArgs = null;
 
-        this.ws = new WebSocket(socketAddresses[this.socket_index], { perMessageDeflate: false });
+        this.ws = new WebSocket(this.socketAddresses[this.socket_index], { perMessageDeflate: false });
         this.ws.on('message', data => this.onMessage(data));
         this.ws.on('close', () => this.onClose());
     }
