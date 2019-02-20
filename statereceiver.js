@@ -9,6 +9,7 @@ class StateReceiver {
         this.done_handlers = []
         this.progress_handlers = []
         this.connected_handlers = []
+        this.fork_handlers = []
         this.irreversible_only = irreversibleOnly
 
         // console.log(config)
