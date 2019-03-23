@@ -135,9 +135,6 @@ class StateReceiver {
             return;
         let block_num = response.this_block.block_num;
         //console.log(response.this_block)
-        if (block){
-            console.log(block);
-        }
 
         if ( this.mode === 0 && block_num <= this.current_block ){
             console.log(`Detected fork in serial mode: current:${block_num} <= head:${this.current_block}`)
@@ -177,6 +174,16 @@ class StateReceiver {
                 }
                 else {
                     handler.queueTrace(block_num, traces)
+                }
+            })
+        }
+        if (block){
+            this.block_handlers.forEach((handler) => {
+                if (this.mode === 0){
+                    handler.processblock(block)
+                }
+                else {
+                    handler.queueBlock(block)
                 }
             })
         }
