@@ -114,7 +114,7 @@ class StateReceiver {
                 start_block_num: parseInt(this.start_block),
                 end_block_num: parseInt(this.end_block),
                 have_positions:[],
-                fetch_block: (this.block_handlers.length > 0),
+                fetch_block: true,
                 fetch_traces: (this.trace_handlers.length > 0),
                 fetch_deltas: (this.delta_handlers.length > 0),
             });
@@ -156,13 +156,18 @@ class StateReceiver {
             // })
         }
 
+        let block_timestamp = null;
+        if (block){
+            block_timestamp = new Date(block.timestamp.replace(['.000', '.500'], 'Z'));
+        }
+
         if (deltas && deltas.length){
             this.delta_handlers.forEach(((handler) => {
                 if (this.mode === 0){
-                    handler.processDelta(block_num, deltas, this.connection.types)
+                    handler.processDelta(block_num, deltas, this.connection.types, block_timestamp)
                 }
                 else {
-                    handler.queueDelta(block_num, deltas, this.connection.types)
+                    handler.queueDelta(block_num, deltas, this.connection.types, block_timestamp)
                 }
             }).bind(this))
         }
@@ -170,10 +175,10 @@ class StateReceiver {
         if (traces){
             this.trace_handlers.forEach((handler) => {
                 if (this.mode === 0){
-                    handler.processTrace(block_num, traces)
+                    handler.processTrace(block_num, traces, block_timestamp)
                 }
                 else {
-                    handler.queueTrace(block_num, traces)
+                    handler.queueTrace(block_num, traces, block_timestamp)
                 }
             })
         }
