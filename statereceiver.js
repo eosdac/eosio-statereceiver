@@ -180,7 +180,7 @@ class StateReceiver {
         if (block){
             this.block_handlers.forEach((handler) => {
                 if (this.mode === 0){
-                    handler.processblock(block)
+                    handler.processBlock(block)
                 }
                 else {
                     handler.queueBlock(block)
