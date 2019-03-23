@@ -9,6 +9,7 @@ class StateReceiver {
         this.done_handlers = []
         this.progress_handlers = []
         this.connected_handlers = []
+        this.block_handlers = []
         this.fork_handlers = []
         this.irreversible_only = irreversibleOnly
 
@@ -26,6 +27,10 @@ class StateReceiver {
 
         console.log(`Created StateReceiver, Start : ${startBlock}, End : ${endBlock}, Mode : ${mode_str}`);
 
+    }
+
+    registerBlockHandler(h){
+        this.block_handlers.push(h)
     }
 
     registerDoneHandler(h){
@@ -78,10 +83,24 @@ class StateReceiver {
     }
 
     async restart(startBlock, endBlock){
+        this.complete = false
+
         this.start_block = startBlock
         this.end_block = endBlock
 
-        await this.requestBlocks()
+        this.connection = new Connection({
+            socketAddress: this.config.eos.wsEndpoint,
+            socketAddresses: this.config.eos.wsEndpoints,
+            receivedAbi: (() => {
+                this.requestBlocks()
+
+                this.connected_handlers.forEach(((handler) => {
+                    handler(this.connection)
+                }).bind(this))
+            }).bind(this),
+            receivedBlock: this.receivedBlock.bind(this)
+        });
+        // await this.requestBlocks()
     }
 
     destroy(){
@@ -92,10 +111,10 @@ class StateReceiver {
         try {
             await this.connection.requestBlocks({
                 irreversibleOnly: this.irreversible_only,
-                start_block_num: this.start_block,
-                end_block_num: this.end_block,
+                start_block_num: parseInt(this.start_block),
+                end_block_num: parseInt(this.end_block),
                 have_positions:[],
-                fetch_block: false,
+                fetch_block: (this.block_handlers.length > 0),
                 fetch_traces: (this.trace_handlers.length > 0),
                 fetch_deltas: (this.delta_handlers.length > 0),
             });
@@ -115,6 +134,10 @@ class StateReceiver {
         if (!response.this_block)
             return;
         let block_num = response.this_block.block_num;
+        //console.log(response.this_block)
+        if (block){
+            console.log(block);
+        }
 
         if ( this.mode === 0 && block_num <= this.current_block ){
             console.log(`Detected fork in serial mode: current:${block_num} <= head:${this.current_block}`)
@@ -159,6 +182,7 @@ class StateReceiver {
         }
 
         if (this.current_block === this.end_block -1){
+            console.log(`State Handler complete!`)
             this.complete = true
             this.done_handlers.forEach((handler) => {
                 handler()
