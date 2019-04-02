@@ -1,4 +1,0 @@
-[submodule "eosjs"]
-	path = eosjs
-	url = https://github.com/EOSIO/eosjs.git
-	branch = develop
