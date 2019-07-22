@@ -48,6 +48,7 @@ class Connection {
             if (k === 'trx' && Array.isArray(v) && v[0] === 'packed_transaction') {
                 const pt = v[1];
                 let packed_trx = pt.packed_trx;
+                console.log(`Compression is ${pt.compression}`);
                 if (pt.compression === 0)
                     packed_trx = this.deserialize('transaction', packed_trx);
                 else if (pt.compression === 1)
@@ -159,9 +160,9 @@ class Connection {
             if (this.currentArgs.fetch_block && response.block && response.block.length)
                 block = this.deserialize('signed_block', response.block);
             if (this.currentArgs.fetch_traces && response.traces && response.traces.length)
-                traces = this.deserialize('transaction_trace[]', zlib.unzipSync(response.traces));
+                traces = this.deserialize('transaction_trace[]', response.traces);
             if (this.currentArgs.fetch_deltas && response.deltas && response.deltas.length)
-                deltas = this.deserialize('table_delta[]', zlib.unzipSync(response.deltas));
+                deltas = this.deserialize('table_delta[]', response.deltas);
             await this.receivedBlock(response, block, traces, deltas);
         }
         this.inProcessBlocks = false;
