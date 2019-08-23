@@ -19,10 +19,54 @@ class Connection {
         this.inProcessBlocks = false;
         this.socket_index = 0;
         this.currentArgs = null;
+        this.connected = false;
+        this.connecting = false;
+        this.connectionRetries = 0;
+        this.maxConnectionRetries = 100;
 
-        this.ws = new WebSocket(this.socketAddresses[this.socket_index], { perMessageDeflate: false });
-        this.ws.on('message', data => this.onMessage(data));
-        this.ws.on('close', () => this.onClose());
+        this.connect(this.socketAddresses[this.socket_index]);
+    }
+
+    connect(endpoint){
+        if (!this.connected && !this.connecting){
+            console.error(`Websocket connecting to ${endpoint}`);
+
+            this.connecting = true;
+
+            this.ws = new WebSocket(endpoint, { perMessageDeflate: false });
+            this.ws.on('open', () => this.onConnect());
+            this.ws.on('message', data => this.onMessage(data));
+            this.ws.on('close', () => this.onClose());
+            this.ws.on('error', () => {console.error(`Websocket error`)});
+        }
+    }
+
+    reconnect(){
+        if (this.connectionRetries > this.maxConnectionRetries){
+            console.error(`Exceeded max reconnection attempts of ${this.maxConnectionRetries}`);
+            return;
+        }
+        else {
+            const endpoint = this.nextEndpoint();
+            console.log(`Reconnecting to ${endpoint}...`);
+            const timeout = Math.pow(2, this.connectionRetries/5) * 1000;
+            console.log(`Retrying with delay of ${timeout / 1000}s`);
+            setTimeout(() => {
+                this.connect(endpoint);
+            }, timeout);
+            this.connectionRetries++;
+        }
+    }
+
+    nextEndpoint(){
+        let next_index = ++this.socket_index;
+
+        if (next_index >= this.socketAddresses.length){
+            next_index = 0;
+        }
+        this.socket_index = next_index;
+
+        return this.socketAddresses[this.socket_index];
     }
 
     serialize(type, value) {
@@ -67,6 +111,12 @@ class Connection {
         this.ws.send(this.serialize('request', request));
     }
 
+    onConnect(){
+        this.connected = true;
+        this.connecting = false;
+        this.connectionRetries = 0;
+    }
+
     onMessage(data) {
         try {
             if (!this.abi) {
@@ -89,26 +139,18 @@ class Connection {
     }
 
     onClose() {
-        console.error(`Websocket disconnected from ${this.socketAddresses[this.socket_index]}`)
+        console.error(`Websocket disconnected from ${this.socketAddresses[this.socket_index]}`);
         this.ws.terminate();
         this.abi = null;
         this.types = null;
         this.tables = new Map;
         this.blocksQueue = [];
         this.inProcessBlocks = false;
+        this.connected = false;
+        this.connecting = false;
 
-        let next_index = ++this.socket_index;
-        console.log(this.socketAddresses)
+        this.reconnect();
 
-        if (next_index >= this.socketAddresses.length){
-            next_index = 0;
-        }
-        console.log(`Connecting to ${this.socketAddresses[next_index]} in index ${next_index}`)
-        this.ws = new WebSocket(this.socketAddresses[next_index], { perMessageDeflate: false });
-        this.ws.on('message', data => this.onMessage(data));
-        this.ws.on('close', () => this.onClose());
-
-        this.socket_index = next_index
     }
 
     onOpen(){
