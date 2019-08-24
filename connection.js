@@ -8,7 +8,7 @@ class Connection {
         this.receivedAbi = receivedAbi;
         this.receivedBlock = receivedBlock;
         this.socketAddresses = socketAddresses;
-        if (typeof socketAddress == 'string'){
+        if (typeof socketAddress == 'string' && !(socketAddresses && socketAddresses.length)){
             this.socketAddresses = [socketAddress]
         }
 
