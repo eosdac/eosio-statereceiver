@@ -110,7 +110,7 @@ class StateReceiver {
     async requestBlocks(){
         try {
             await this.connection.requestBlocks({
-                irreversibleOnly: this.irreversible_only,
+                irreversible_only: this.irreversible_only,
                 start_block_num: parseInt(this.start_block),
                 end_block_num: parseInt(this.end_block),
                 have_positions:[],
