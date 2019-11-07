@@ -1,6 +1,6 @@
 {
   "name": "@eosdac/eosio-statereceiver",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "State receiver modeule for connecting to the state history plugin",
   "main": "statereceiver.js",
   "scripts": {
