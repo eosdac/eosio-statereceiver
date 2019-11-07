@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/eosdac/eosio-statereceiver.git"
+    "url": "git://github.com/eosdac/eosio-statereceiver.git"
   },
   "author": "Michael Yeates",
   "license": "ISC",
