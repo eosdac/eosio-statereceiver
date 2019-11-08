@@ -37,7 +37,7 @@ class Connection {
             this.ws.on('open', () => this.onConnect());
             this.ws.on('message', data => this.onMessage(data));
             this.ws.on('close', () => this.onClose());
-            this.ws.on('error', () => {console.error(`Websocket error`)});
+            this.ws.on('error', (e) => {console.error(`Websocket error`, e)});
         }
     }
 
