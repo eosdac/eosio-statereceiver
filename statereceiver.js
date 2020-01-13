@@ -137,6 +137,7 @@ class StateReceiver {
             return;
         let block_num = response.this_block.block_num;
         //console.log(response.this_block)
+        // console.log(`Received block ${block_num}`)
 
         if ( this.mode === 0 && block_num <= this.current_block ){
             console.log(`Detected fork in serial mode: current:${block_num} <= head:${this.current_block}`)
@@ -161,6 +162,9 @@ class StateReceiver {
         let block_timestamp = null;
         if (block){
             block_timestamp = new Date(block.timestamp.replace(['.000', '.500'], 'Z'));
+        }
+        else {
+            block_timestamp = new Date();
         }
 
         if (deltas && deltas.length){
