@@ -1,7 +1,7 @@
 {
-  "name": "@eosdac/eosio-statereceiver",
-  "version": "1.0.1",
-  "description": "State receiver modeule for connecting to the state history plugin",
+  "name": "@eosdacio/eosio-statereceiver",
+  "version": "1.0.2",
+  "description": "State receiver module for connecting to the state history plugin",
   "main": "statereceiver.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,7 +11,7 @@
     "url": "git://github.com/eosdac/eosio-statereceiver.git"
   },
   "author": "Michael Yeates",
-  "license": "ISC",
+  "license": "BSD",
   "bugs": {
     "url": "https://github.com/eosdac/eosio-statereceiver/issues"
   },
