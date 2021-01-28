@@ -205,6 +205,7 @@ class StateReceiver {
             this.done_handlers.forEach((handler) => {
                 handler()
             })
+            this.connection.disconnect()
         }
 
         this.progress_handlers.forEach((handler) => {

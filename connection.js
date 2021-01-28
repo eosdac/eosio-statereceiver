@@ -36,9 +36,16 @@ class Connection {
             this.ws = new WebSocket(endpoint, { perMessageDeflate: false });
             this.ws.on('open', () => this.onConnect());
             this.ws.on('message', data => this.onMessage(data));
-            this.ws.on('close', () => this.onClose());
+            // this.ws.on('error', () => this.onError());
+            this.ws.on('close', (e) => this.onClose(e));
             this.ws.on('error', (e) => {console.error(`Websocket error`, e)});
+            // this.ws.on('close', (e) => {console.error(`Websocket close`, e)});
         }
+    }
+
+    disconnect() {
+        console.log(`Closing connection`);
+        this.ws.close();
     }
 
     reconnect(){
@@ -138,9 +145,9 @@ class Connection {
         }
     }
 
-    onClose() {
-        console.error(`Websocket disconnected from ${this.socketAddresses[this.socket_index]}`);
-        this.ws.terminate();
+    onClose(code) {
+        console.error(`Websocket disconnected from ${this.socketAddresses[this.socket_index]} with code ${code}`);
+        // this.ws.terminate();
         this.abi = null;
         this.types = null;
         this.tables = new Map;
@@ -149,7 +156,10 @@ class Connection {
         this.connected = false;
         this.connecting = false;
 
-        this.reconnect();
+        if (code !== 1000){
+            // 1000 = closed by me normally
+            this.reconnect();
+        }
 
     }
 
