@@ -185,35 +185,35 @@ class StateReceiver {
         }
 
         if (deltas && deltas.length){
-            this.delta_handlers.forEach(((handler) => {
+            for(let handler of this.delta_handlers) {
                 if (this.mode === 0){
-                    handler.processDelta(block_num, deltas, this.connection.types, block_timestamp)
+                    await handler.processDelta(block_num, deltas, this.connection.types, block_timestamp)
                 }
                 else {
-                    handler.queueDelta(block_num, deltas, this.connection.types, block_timestamp)
+                    await handler.queueDelta(block_num, deltas, this.connection.types, block_timestamp)
                 }
-            }).bind(this))
+            }
         }
 
         if (traces){
-            this.trace_handlers.forEach((handler) => {
+            for(let handler of this.trace_handlers) {
                 if (this.mode === 0){
-                    handler.processTrace(block_num, traces, block_timestamp)
+                    await handler.processTrace(block_num, traces, block_timestamp)
                 }
                 else {
-                    handler.queueTrace(block_num, traces, block_timestamp)
+                    await handler.queueTrace(block_num, traces, block_timestamp)
                 }
-            })
+            }
         }
         if (block){
-            this.block_handlers.forEach((handler) => {
+            for(let handler of this.block_handlers) {
                 if (this.mode === 0){
-                    handler.processBlock(block_num, block)
+                    await handler.processBlock(block_num, block)
                 }
                 else {
-                    handler.queueBlock(block_num, block)
+                    await handler.queueBlock(block_num, block)
                 }
-            })
+            }
         }
 
         if (this.current_block === this.end_block -1){
