@@ -1,7 +1,7 @@
 const Connection = require('./connection');
-const StageReceiver = require('./state-receiver');
+const StateReceiver = require('./state-receiver');
 
 module.exports = {
   Connection,
-  StageReceiver,
+  StateReceiver,
 };
