@@ -205,6 +205,10 @@ describe('state receiver', () => {
   });
 
   describe('processMessageData', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
     it('normal case', async () => {
       const serializedMessageQueue = ['msg1', 'msg2'];
       const sr = createStateReceiver({
@@ -216,8 +220,8 @@ describe('state receiver', () => {
       const spy_sendAck = jest.spyOn(sr, 'sendAck').mockResolvedValue();
       const actionSet = new Set(['eosio.token::transfer', 'bridge.wax::reqnft']);
 
-      deserializeDeep.mockResolvedValueOnce(['a', 'b1']);
-      deserializeDeep.mockResolvedValueOnce(['a', 'b2']);
+      deserializeDeep.mockResolvedValueOnce(['a', { this_block: 'b1' }]);
+      deserializeDeep.mockResolvedValueOnce(['a', { this_block: 'b2' }]);
 
       await sr.processMessageData(serializedMessageQueue);
 
@@ -244,10 +248,76 @@ describe('state receiver', () => {
       });
 
       expect(spy_deliverDeserializedBlock).toHaveBeenCalledTimes(2);
-      expect(spy_deliverDeserializedBlock).toHaveBeenNthCalledWith(1, 'b1');
-      expect(spy_deliverDeserializedBlock).toHaveBeenNthCalledWith(2, 'b2');
+      expect(spy_deliverDeserializedBlock).toHaveBeenNthCalledWith(1, { this_block: 'b1' });
+      expect(spy_deliverDeserializedBlock).toHaveBeenNthCalledWith(2, { this_block: 'b2' });
 
       expect(spy_sendAck).not.toBeCalled();
+    });
+
+    it('when reached the head block, the value of `this_block` is NULL', async () => {
+      const { Serialize } = require('eosjs');
+      const abi = require('./abi.json');
+      const types = Serialize.getTypesFromAbi(Serialize.createInitialTypes(), abi);
+      const msgData = Buffer.from([
+        1, 167, 251, 148, 2, 2, 148, 251, 167, 148, 188, 11, 194, 167, 149, 180, 235, 9, 152, 225,
+        83, 94, 9, 249, 232, 125, 62, 222, 155, 215, 192, 134, 211, 73, 116, 189, 190, 165, 251,
+        148, 2, 2, 148, 251, 165, 159, 182, 108, 209, 105, 143, 67, 174, 252, 212, 204, 99, 10, 59,
+        37, 111, 166, 109, 62, 155, 229, 151, 79, 160, 159, 108, 154, 138, 0, 0, 0, 0, 0,
+      ]);
+      const serializedMessageQueue = [msgData];
+      const onError = jest.fn((err) => {
+        console.error(err.message);
+      });
+      const sr = createStateReceiver({
+        eosApi: { name: 'eos-api' },
+        onError,
+      });
+      sr.types = types;
+
+      const spy_deliverDeserializedBlock = jest
+        .spyOn(sr, 'deliverDeserializedBlock')
+        .mockResolvedValue();
+      jest.spyOn(sr, 'sendAck').mockResolvedValue();
+      const actionSet = new Set(['eosio.token::transfer', 'bridge.wax::reqnft']);
+      deserializeDeep.mockReturnValue([
+        'get_blocks_result_v0',
+        {
+          block: null,
+          deltas: null,
+          head: {
+            block_id: '0294FBA794BC0BC2A795B4EB0998E1535E09F9E87D3EDE9BD7C086D34974BDBE',
+            block_num: 43318183,
+          },
+          last_irreversible: {
+            block_id: '0294FBA59FB66CD1698F43AEFCD4CC630A3B256FA66D3E9BE5974FA09F6C9A8A',
+            block_num: 43318181,
+          },
+          prev_block: null,
+          this_block: null,
+          traces: null,
+        },
+      ]);
+
+      await sr.processMessageData(serializedMessageQueue);
+
+      expect(serializedMessageQueue.length).toEqual(0);
+      expect(deserializeDeep).toHaveBeenCalledTimes(1);
+      expect(deserializeDeep).toHaveBeenNthCalledWith(1, {
+        data: msgData,
+        eosApi: { name: 'eos-api' },
+        options: {
+          actionSet,
+          deserializeTraces: true,
+        },
+        type: 'result',
+        types,
+      });
+
+      expect(onError).not.toBeCalled();
+      expect(spy_deliverDeserializedBlock).toHaveBeenCalledTimes(0);
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Reached the head of the chain: ["get_blocks_result_v0",{"block":null,"deltas":null,"head":{"block_id":"0294FBA794BC0BC2A795B4EB0998E1535E09F9E87D3EDE9BD7C086D34974BDBE","block_num":43318183},"last_irreversible":{"block_id":"0294FBA59FB66CD1698F43AEFCD4CC630A3B256FA66D3E9BE5974FA09F6C9A8A","block_num":43318181},"prev_block":null,"this_block":null,"traces":null}]'
+      );
     });
 
     it('pauseAck is true 1', async () => {

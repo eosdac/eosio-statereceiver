@@ -224,7 +224,7 @@ class StateReceiver {
   /**
    *
    * @param {Array<Buffer>} serializedMessageQueue
-   * @returns Promise
+   * @returns {Promise<void>}
    */
   async processMessageData(serializedMessageQueue) {
     if (this.processingMessageData) {
@@ -254,7 +254,12 @@ class StateReceiver {
           data: serializedMessage,
           options: deserializingOptions,
         });
-        await this.deliverDeserializedBlock(blockData[1]);
+
+        if (blockData[1] && blockData[1].this_block) {
+          await this.deliverDeserializedBlock(blockData[1]);
+        } else {
+          this.logger.debug(`Reached the head of the chain: ${JSON.stringify(blockData)}`);
+        }
       }
 
       if (this.pauseAck) {

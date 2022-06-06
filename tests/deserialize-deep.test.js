@@ -279,4 +279,48 @@ describe('deserialize-deep', () => {
       },
     ]);
   });
+
+  it('handle case where this_block is null (reached HEAD)', async () => {
+    const deserializeActions = jest.fn();
+    const eosApi = {
+      deserializeActions,
+    };
+
+    const data = Buffer.from([
+      1, 167, 251, 148, 2, 2, 148, 251, 167, 148, 188, 11, 194, 167, 149, 180, 235, 9, 152, 225, 83,
+      94, 9, 249, 232, 125, 62, 222, 155, 215, 192, 134, 211, 73, 116, 189, 190, 165, 251, 148, 2,
+      2, 148, 251, 165, 159, 182, 108, 209, 105, 143, 67, 174, 252, 212, 204, 99, 10, 59, 37, 111,
+      166, 109, 62, 155, 229, 151, 79, 160, 159, 108, 154, 138, 0, 0, 0, 0, 0,
+    ]);
+
+    const blockData = await deserializeDeep({
+      eosApi,
+      types,
+      type: 'result',
+      data,
+      options: {
+        deserializeTraces: true,
+        actionSet: new Set(['bridge.wax::burn']),
+      },
+    });
+
+    expect(blockData).toEqual([
+      'get_blocks_result_v0',
+      {
+        block: null,
+        deltas: null,
+        head: {
+          block_id: '0294FBA794BC0BC2A795B4EB0998E1535E09F9E87D3EDE9BD7C086D34974BDBE',
+          block_num: 43318183,
+        },
+        last_irreversible: {
+          block_id: '0294FBA59FB66CD1698F43AEFCD4CC630A3B256FA66D3E9BE5974FA09F6C9A8A',
+          block_num: 43318181,
+        },
+        prev_block: null,
+        this_block: null,
+        traces: null,
+      },
+    ]);
+  });
 });
