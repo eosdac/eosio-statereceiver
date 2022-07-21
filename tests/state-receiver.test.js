@@ -13,6 +13,7 @@ jest.mock('../src/connection', () => {
       send: jest.fn(),
     };
     this.connect = jest.fn();
+    this.disconnect = jest.fn();
   });
 });
 
@@ -44,6 +45,7 @@ function createConnection() {
       send: jest.fn(),
     },
     connect: jest.fn(),
+    disconnect: jest.fn(),
   };
 }
 
@@ -162,14 +164,23 @@ describe('state receiver', () => {
   describe('start', () => {
     it('connection is not null', () => {
       const sr = createStateReceiver();
+      const spy_init = jest.spyOn(sr, 'init');
       sr.abi = 'abc';
-      sr.connection = createConnection();
+      const connection1 = createConnection();
+      sr.connection = connection1;
       sr.start();
+
+      const connection2 = sr.connection;
+
       expect(sr.abi).toBeNull();
-      expect(sr.connection.connect).toBeCalled();
+      expect(connection1.disconnect).toBeCalled();
+      expect(connection2.connect).toBeCalled();
+      expect(connection2.disconnect).not.toBeCalled();
+      expect(spy_init).toBeCalled();
     });
     it('connection is null', () => {
       const sr = createStateReceiver();
+      const spy_init = jest.spyOn(sr, 'init');
       sr.start();
       expect(Connection).toBeCalledWith({
         logger,
@@ -179,6 +190,7 @@ describe('state receiver', () => {
         socketAddresses: ['ws://localhost:8080'],
       });
       expect(sr.connection.connect).toBeCalled();
+      expect(spy_init).toBeCalled();
     });
   });
 
@@ -187,7 +199,7 @@ describe('state receiver', () => {
       const sr = createStateReceiver();
       const spy_init = jest.spyOn(sr, 'init').mockReturnValue();
       sr.stop();
-      expect(spy_init).toBeCalled();
+      expect(spy_init).not.toBeCalled();
     });
     it('connection is not null', () => {
       const sr = createStateReceiver();
@@ -200,7 +212,7 @@ describe('state receiver', () => {
       sr.stop();
 
       expect(connection.disconnect).toBeCalled();
-      expect(spy_init).toBeCalled();
+      expect(spy_init).not.toBeCalled();
     });
   });
 
@@ -315,7 +327,7 @@ describe('state receiver', () => {
 
       expect(onError).not.toBeCalled();
       expect(spy_deliverDeserializedBlock).toHaveBeenCalledTimes(0);
-      expect(logger.debug).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Reached the head of the chain: ["get_blocks_result_v0",{"block":null,"deltas":null,"head":{"block_id":"0294FBA794BC0BC2A795B4EB0998E1535E09F9E87D3EDE9BD7C086D34974BDBE","block_num":43318183},"last_irreversible":{"block_id":"0294FBA59FB66CD1698F43AEFCD4CC630A3B256FA66D3E9BE5974FA09F6C9A8A","block_num":43318181},"prev_block":null,"this_block":null,"traces":null}]'
       );
     });
@@ -515,7 +527,8 @@ describe('state receiver', () => {
       const sr = createStateReceiver();
       sr.send('message');
       expect(serialize).not.toBeCalledWith('message');
-      expect(logger.debug).toBeCalledWith('Connection is not ready, cannot send message.');
+      expect(logger.info).toBeCalledWith('Creating eosApi with endpoint: http://localhost:8888');
+      expect(logger.warn).toBeCalledWith('Connection is not ready, cannot send message.');
     });
 
     it('send serialized message', () => {

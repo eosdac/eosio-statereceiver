@@ -16,6 +16,7 @@ const sr = new StateReceiver({
     'bridge.wax::reqwaxtoeth',
     'bridge.wax::nft2wax',
   ],
+  maxQueueSize: 10,
 });
 
 let blockCount = 0;
@@ -37,7 +38,7 @@ const statInterval = setInterval(() => {
 
 sr.registerTraceHandler({
   async processTrace(block_num, traces) {
-    await sleep(1);
+    await sleep(1000);
 
     blockCount++;
 
@@ -71,13 +72,10 @@ sr.onError = (err) => {
 
 sr.start();
 
-// setTimeout(() => {
-//   sr.stop();
-//   setTimeout(() => {
-//     sr.start();
-//     setTimeout(() => {
-//       sr.stop();
-//       clearInterval(statInterval);
-//     }, 5000);
-//   }, 1000);
-// }, 20000);
+setTimeout(() => {
+  sr.stop();
+
+  setTimeout(() => {
+    sr.start();
+  }, 5000);
+}, 5000);

@@ -1,6 +1,6 @@
 {
   "name": "@waxio/eosio-statereceiver",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "State receiver module for connecting to the state history plugin",
   "main": "src/index.js",
   "files": [
@@ -9,7 +9,7 @@
   "scripts": {
     "state-receiver": "node ./examples/state-receiver.js",
     "connection": "node ./examples/connection.js",
-    "dev": "npm run state-receiver",
+    "dev": "nodemon ./examples/state-receiver.js",
     "test": "jest",
     "prepare": "husky install"
   },
@@ -33,6 +33,7 @@
     "husky": "8.0.1",
     "jest": "28.1.0",
     "lint-staged": "12.4.2",
+    "nodemon": "^2.0.19",
     "prettier": "2.6.2"
   },
   "lint-staged": {

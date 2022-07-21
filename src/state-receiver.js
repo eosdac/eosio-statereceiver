@@ -92,26 +92,33 @@ class StateReceiver {
     this.pauseAck = false;
     this.serializedMessageQueue = [];
     this.processingMessageData = false;
-  }
 
-  start() {
     /**
      * This needs to be reset so that the message handler know that
      * it is going to to get a first message as ABI
      */
     this.abi = null;
+  }
 
-    if (!this.connection) {
-      this.connection = new Connection({
-        logger: this.logger,
-        socketAddresses: Array.from(new Set(this.config.socketAddresses)),
-        onError: (err) => this._onError(err),
-        onMessage: this.onMessage.bind(this),
-        onClose: () => {
-          this.init();
-        },
-      });
+  start() {
+    this.logger.info(`==== Starting the receiver.`);
+    this.init();
+
+    if (this.connection) {
+      // close previous connection
+      this.connection.disconnect();
+      this.connection = null;
     }
+
+    this.connection = new Connection({
+      logger: this.logger,
+      socketAddresses: Array.from(new Set(this.config.socketAddresses)),
+      onError: (err) => this._onError(err),
+      onMessage: this.onMessage.bind(this),
+      onClose: () => {
+        this.init();
+      },
+    });
 
     this.connection.connect();
   }
@@ -126,12 +133,12 @@ class StateReceiver {
   }
 
   stop() {
+    this.logger.info(`==== Receive stop command: stopping receiver.`);
     if (this.connection) {
       this.connection.disconnect();
       this.connection = null;
     }
-
-    this.init();
+    this.logger.info(`==== Receiver is stopped.`);
   }
 
   /**
@@ -162,6 +169,7 @@ class StateReceiver {
         this.serializedMessageQueue.push(data);
 
         if (this.serializedMessageQueue.length >= this.config.maxQueueSize) {
+          this.logger.info(`The max queue size is reached; pause the ACK and wait for processing.`);
           this.pauseAck = true;
         }
 
@@ -217,7 +225,7 @@ class StateReceiver {
     if (this.connection && this.connection.ws) {
       this.connection.ws.send(serialize(this.types, 'request', request));
     } else {
-      this.logger.debug('Connection is not ready, cannot send message.');
+      this.logger.warn('Connection is not ready, cannot send message.');
     }
   }
 
@@ -242,9 +250,12 @@ class StateReceiver {
       while (serializedMessageQueue.length > 0) {
         const serializedMessage = serializedMessageQueue.shift();
 
-        if (this.pauseAck && serializedMessageQueue.length < 5) {
-          this.sendAck(1);
+        if (this.pauseAck && serializedMessageQueue.length < 2) {
+          this.logger.info(
+            `serializedMessageQueue.length is less than 2. Set pauseAck to false again.`
+          );
           this.pauseAck = false;
+          this.sendAck(1);
         }
 
         const blockData = await deserializeDeep({
@@ -258,13 +269,16 @@ class StateReceiver {
         if (blockData[1] && blockData[1].this_block) {
           await this.deliverDeserializedBlock(blockData[1]);
         } else {
-          this.logger.debug(`Reached the head of the chain: ${JSON.stringify(blockData)}`);
+          this.logger.info(`Reached the head of the chain: ${JSON.stringify(blockData)}`);
         }
       }
 
       if (this.pauseAck) {
-        this.sendAck(1);
+        this.logger.info(
+          `The pauseAck state is not cleared since unknow reason. Set pauseAck to false again.`
+        );
         this.pauseAck = false;
+        this.sendAck(1);
       }
     } catch (err) {
       this._onError(err);
