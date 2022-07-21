@@ -13,6 +13,7 @@ jest.mock('../src/connection', () => {
       send: jest.fn(),
     };
     this.connect = jest.fn();
+    this.disconnect = jest.fn();
   });
 });
 
@@ -44,6 +45,7 @@ function createConnection() {
       send: jest.fn(),
     },
     connect: jest.fn(),
+    disconnect: jest.fn(),
   };
 }
 
@@ -162,14 +164,23 @@ describe('state receiver', () => {
   describe('start', () => {
     it('connection is not null', () => {
       const sr = createStateReceiver();
+      const spy_init = jest.spyOn(sr, 'init');
       sr.abi = 'abc';
-      sr.connection = createConnection();
+      const connection1 = createConnection();
+      sr.connection = connection1;
       sr.start();
+
+      const connection2 = sr.connection;
+
       expect(sr.abi).toBeNull();
-      expect(sr.connection.connect).toBeCalled();
+      expect(connection1.disconnect).toBeCalled();
+      expect(connection2.connect).toBeCalled();
+      expect(connection2.disconnect).not.toBeCalled();
+      expect(spy_init).toBeCalled();
     });
     it('connection is null', () => {
       const sr = createStateReceiver();
+      const spy_init = jest.spyOn(sr, 'init');
       sr.start();
       expect(Connection).toBeCalledWith({
         logger,
@@ -179,6 +190,7 @@ describe('state receiver', () => {
         socketAddresses: ['ws://localhost:8080'],
       });
       expect(sr.connection.connect).toBeCalled();
+      expect(spy_init).toBeCalled();
     });
   });
 
@@ -187,7 +199,7 @@ describe('state receiver', () => {
       const sr = createStateReceiver();
       const spy_init = jest.spyOn(sr, 'init').mockReturnValue();
       sr.stop();
-      expect(spy_init).toBeCalled();
+      expect(spy_init).not.toBeCalled();
     });
     it('connection is not null', () => {
       const sr = createStateReceiver();
@@ -200,7 +212,7 @@ describe('state receiver', () => {
       sr.stop();
 
       expect(connection.disconnect).toBeCalled();
-      expect(spy_init).toBeCalled();
+      expect(spy_init).not.toBeCalled();
     });
   });
 

@@ -71,13 +71,15 @@ sr.onError = (err) => {
 
 sr.start();
 
-// setTimeout(() => {
-//   sr.stop();
-//   setTimeout(() => {
-//     sr.start();
-//     setTimeout(() => {
-//       sr.stop();
-//       clearInterval(statInterval);
-//     }, 5000);
-//   }, 1000);
-// }, 20000);
+setTimeout(() => {
+  sr.stop();
+  setTimeout(() => {
+    sr.start();
+    setTimeout(() => {
+      sr.stop();
+      setTimeout(() => {
+        sr.start();
+      }, 5000);
+    }, 5000);
+  }, 5000);
+}, 5000);

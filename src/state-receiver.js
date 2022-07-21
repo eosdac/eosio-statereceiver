@@ -92,26 +92,33 @@ class StateReceiver {
     this.pauseAck = false;
     this.serializedMessageQueue = [];
     this.processingMessageData = false;
-  }
 
-  start() {
     /**
      * This needs to be reset so that the message handler know that
      * it is going to to get a first message as ABI
      */
     this.abi = null;
+  }
 
-    if (!this.connection) {
-      this.connection = new Connection({
-        logger: this.logger,
-        socketAddresses: Array.from(new Set(this.config.socketAddresses)),
-        onError: (err) => this._onError(err),
-        onMessage: this.onMessage.bind(this),
-        onClose: () => {
-          this.init();
-        },
-      });
+  start() {
+    this.logger.info(`==== Starting the receiver.`);
+    this.init();
+
+    if (this.connection) {
+      // close previous connection
+      this.connection.disconnect();
+      this.connection = null;
     }
+
+    this.connection = new Connection({
+      logger: this.logger,
+      socketAddresses: Array.from(new Set(this.config.socketAddresses)),
+      onError: (err) => this._onError(err),
+      onMessage: this.onMessage.bind(this),
+      onClose: () => {
+        this.init();
+      },
+    });
 
     this.connection.connect();
   }
@@ -126,12 +133,11 @@ class StateReceiver {
   }
 
   stop() {
+    this.logger.info(`==== Receive stop command: stopping receiver.`);
     if (this.connection) {
       this.connection.disconnect();
       this.connection = null;
     }
-
-    this.init();
   }
 
   /**
