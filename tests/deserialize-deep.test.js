@@ -1,6 +1,7 @@
 const { Serialize } = require('eosjs');
 const abi = require('./abi.json');
 const jsonData = require('./block-data-40938911.json');
+const jsonDataActionTraceV1 = require('./block-data-action_trace_v1.json');
 const deserializeDeep = require('../src/deserialize-deep');
 
 const types = Serialize.getTypesFromAbi(Serialize.createInitialTypes(), abi);
@@ -278,6 +279,109 @@ describe('deserialize-deep', () => {
         ],
       },
     ]);
+  });
+
+  it('deserialize block has action_trace_v1 with option to deserialize internal data', async () => {
+    const data = Buffer.from(new Uint8Array(jsonDataActionTraceV1.data));
+    const deserializeActions = jest.fn().mockResolvedValueOnce([
+      {
+        data: {},
+      },
+    ]);
+
+    const getAbi = jest.fn().mockResolvedValueOnce({
+      version: 'eosio::abi/1.2',
+      types: [],
+      structs: [
+        {
+          name: 'returnint',
+          base: '',
+          fields: [],
+        },
+        {
+          name: 'returnstring',
+          base: '',
+          fields: [],
+        },
+        {
+          name: 'returnstruct',
+          base: '',
+          fields: [],
+        },
+        {
+          name: 'valuestruct',
+          base: '',
+          fields: [
+            {
+              name: 'value1',
+              type: 'string',
+            },
+            {
+              name: 'value2',
+              type: 'uint16',
+            },
+          ],
+        },
+      ],
+      actions: [
+        {
+          name: 'returnint',
+          type: 'returnint',
+          ricardian_contract: '',
+        },
+        {
+          name: 'returnstring',
+          type: 'returnstring',
+          ricardian_contract: '',
+        },
+        {
+          name: 'returnstruct',
+          type: 'returnstruct',
+          ricardian_contract: '',
+        },
+      ],
+      tables: [],
+      ricardian_clauses: [],
+      error_messages: [],
+      abi_extensions: [],
+      variants: [],
+      action_results: [
+        {
+          name: 'returnint',
+          result_type: 'uint16',
+        },
+        {
+          name: 'returnstring',
+          result_type: 'string',
+        },
+        {
+          name: 'returnstruct',
+          result_type: 'valuestruct',
+        },
+      ],
+      kv_tables: {},
+    });
+    const eosApi = {
+      deserializeActions,
+      getAbi,
+    };
+
+    const blockData = await deserializeDeep({
+      eosApi,
+      types,
+      type: 'result',
+      data,
+      options: {
+        deserializeTraces: true,
+        actionSet: new Set(['returnvalue::returnstruct']),
+      },
+    });
+    expect(deserializeActions).toHaveBeenCalledTimes(1);
+    expect(blockData[1].traces[1][1].action_traces[0][0]).toBe('action_trace_v1');
+    expect(blockData[1].traces[1][1].action_traces[0][1].return_value).toEqual({
+      value1: 'test value1 value1',
+      value2: 35594,
+    });
   });
 
   it('handle case where this_block is null (reached HEAD)', async () => {

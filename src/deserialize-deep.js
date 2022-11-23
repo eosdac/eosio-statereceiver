@@ -1,4 +1,4 @@
-const deserialize = require('./deserialize');
+const { deserialize, deserializeActionResult } = require('./deserialize');
 
 /**
  * @typedef {import('eosjs').Api} EosApi
@@ -42,13 +42,26 @@ module.exports = async function deserializeDeep({ eosApi, types, type, data, opt
 
               if (action_traces && action_traces.length) {
                 for (const [actionTraceVersion, actionTraceData] of action_traces) {
-                  /* We currently work on this version 'action_trace_v0' only */
-                  if (actionTraceVersion === 'action_trace_v0') {
+                  if (
+                    actionTraceVersion === 'action_trace_v0' ||
+                    actionTraceVersion === 'action_trace_v1'
+                  ) {
                     const key = `${actionTraceData.act.account}::${actionTraceData.act.name}`;
 
                     if (actionSet.has(key) && eosApi) {
                       const [act] = await eosApi.deserializeActions([actionTraceData.act]);
                       actionTraceData.act.data = act.data;
+
+                      if (
+                        actionTraceVersion === 'action_trace_v1' &&
+                        actionTraceData.return_value
+                      ) {
+                        actionTraceData.return_value = deserializeActionResult(
+                          await eosApi.getAbi(actionTraceData.act.account),
+                          actionTraceData.act.name,
+                          actionTraceData.return_value
+                        );
+                      }
                     }
                   }
                 }

@@ -61,5 +61,7 @@ Requesting blocks, Start : 20284880, End : 4294967295, Max Messages In Flight : 
 20284890 bridge.wax::nft2wax hg.wam
 Received 918 B/s; Queue size: 20
 Received 946.5 B/s; Queue size: 39
+25077 returnvalue::returnstruct return value {"value1":"test value1 value1","value2":35594}
+25264 returnvalue::returnstring return value "test test action return string"
 ...
 ```

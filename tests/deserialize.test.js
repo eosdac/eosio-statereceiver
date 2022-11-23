@@ -1,5 +1,5 @@
 const { Serialize } = require('eosjs');
-const deserialize = require('../src/deserialize');
+const { deserialize } = require('../src/deserialize');
 const abi = require('./abi.json');
 const jsonData = require('./block-data-40938911.json');
 

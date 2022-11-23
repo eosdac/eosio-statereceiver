@@ -1,7 +1,7 @@
 const { Serialize } = require('eosjs');
 const { TextDecoder, TextEncoder } = require('text-encoding');
 
-module.exports = function deserialize(types, type, array) {
+function deserialize(types, type, array) {
   const buffer = new Serialize.SerialBuffer({
     textEncoder: new TextEncoder(),
     textDecoder: new TextDecoder(),
@@ -17,4 +17,22 @@ module.exports = function deserialize(types, type, array) {
   }
 
   return result;
-};
+}
+
+function deserializeActionResult(abi, actionName, array) {
+  const types = Serialize.getTypesFromAbi(Serialize.createInitialTypes(), abi);
+  for (const { name, result_type } of abi.action_results) {
+    if (name === actionName) {
+      const buffer = new Serialize.SerialBuffer({
+        textEncoder: new TextEncoder(),
+        textDecoder: new TextDecoder(),
+        array,
+      });
+      const type = Serialize.getType(types, result_type);
+      return type.deserialize(buffer, new Serialize.SerializerState({ bytesAsUint8Array: true }));
+    }
+  }
+  return null;
+}
+
+module.exports = { deserialize, deserializeActionResult };

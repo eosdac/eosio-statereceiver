@@ -3,7 +3,6 @@ const { Serialize } = require('eosjs');
 const { StaticPool } = require('node-worker-threads-pool');
 const Connection = require('../src/connection');
 const serialize = require('../src/serialize');
-const deserialize = require('../src/deserialize');
 
 let receivedAbi = false;
 let abi = {};
@@ -49,8 +48,6 @@ const connection = new Connection({
 
       deserializer.exec(['result', data]);
 
-      // const [type, response] = deserialize(types, 'result', data);
-      // console.log(`data`, data, type, response);
       fs.writeFileSync('logs/data.json', JSON.stringify(data));
     }
   },
