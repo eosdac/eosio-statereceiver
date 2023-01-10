@@ -20,6 +20,9 @@ function deserialize(types, type, array) {
 }
 
 function deserializeActionResult(abi, actionName, array) {
+  if (!abi.action_results) {
+    return null;
+  }
   const types = Serialize.getTypesFromAbi(Serialize.createInitialTypes(), abi);
   for (const { name, result_type } of abi.action_results) {
     if (name === actionName) {

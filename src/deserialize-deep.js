@@ -54,7 +54,8 @@ module.exports = async function deserializeDeep({ eosApi, types, type, data, opt
 
                       if (
                         actionTraceVersion === 'action_trace_v1' &&
-                        actionTraceData.return_value
+                        actionTraceData.return_value &&
+                        actionTraceData.return_value.length
                       ) {
                         actionTraceData.return_value = deserializeActionResult(
                           await eosApi.getAbi(actionTraceData.act.account),

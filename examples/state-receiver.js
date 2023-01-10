@@ -7,7 +7,7 @@ const sr = new StateReceiver({
     warn: (...m) => console.warn(...m),
     error: (...m) => console.error(...m),
   },
-  startBlock: 25077,
+  startBlock: 694,
   socketAddresses: [process.env.SOCKET_ADDRESS || 'ws://localhost:8080'],
   eosEndpoint: process.env.EOS_ENDPOINT || 'http://localhost:8888',
   deserializerActions: [
