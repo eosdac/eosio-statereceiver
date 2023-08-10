@@ -194,10 +194,15 @@ class StateReceiver {
   }
 
   requestBlocks() {
-    this.current_block = 0;
+    let startBlock = parseInt(this.startBlock);
+    if (this.current_block > 0) {
+      startBlock = this.current_block + 1;
+    } else {
+      this.current_block = 0;
+    }
 
     const args = {
-      start_block_num: parseInt(this.startBlock),
+      start_block_num: startBlock,
       end_block_num: parseInt(this.endBlock),
       max_messages_in_flight: +this.config.maxMessagesInFlight || 5,
       have_positions: [],
@@ -304,12 +309,13 @@ class StateReceiver {
       return;
     }
 
-    const block_num = blockData.this_block.block_num;
-    this.current_block = block_num;
+    const block_num = +blockData.this_block.block_num;
 
     for (const handler of this.traceHandlers) {
       await handler.processTrace(block_num, blockData.traces);
     }
+
+    this.current_block = block_num;
   }
 
   _onError(e) {

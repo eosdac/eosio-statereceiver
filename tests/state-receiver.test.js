@@ -102,6 +102,32 @@ describe('state receiver', () => {
     ]);
   });
 
+  it('requestBlocks with current block num when reconnect websocket', () => {
+    const sr = createStateReceiver();
+    const spy_send = jest.spyOn(sr, 'send').mockReturnValue();
+
+    sr.current_block = 20284992;
+
+    sr.requestBlocks();
+
+    expect(logger.info).toBeCalledWith(
+      'Requesting blocks, Start : 20284993, End : 4294967295, Max Messages In Flight : 5'
+    );
+    expect(spy_send).toBeCalledWith([
+      'get_blocks_request_v0',
+      {
+        end_block_num: 4294967295,
+        fetch_block: false,
+        fetch_deltas: false,
+        fetch_traces: false,
+        have_positions: [],
+        irreversible_only: true,
+        max_messages_in_flight: 5,
+        start_block_num: sr.current_block + 1,
+      },
+    ]);
+  });
+
   it('receivedAbi', () => {
     const sr = createStateReceiver();
     const spy_requestBlocks = jest.spyOn(sr, 'requestBlocks').mockImplementation(() => {});
