@@ -38,39 +38,58 @@ const statInterval = setInterval(() => {
   );
   blockCountT0 = blockCount;
 }, statSecond * 1000);
+let prevTraces = {};
+let lastBlock = 0;
 
 sr.registerTraceHandler({
   async processTrace(block_num, traces) {
     await sleep(1000);
-
-    blockCount++;
-
-    traces.forEach(([_traceVersion, traceData]) => {
-      const action_traces = traceData.action_traces;
-      action_traces.forEach(([_actionTraceVersion, actionTraceData]) => {
-        const act = actionTraceData.act;
-        const contractName = act.account;
-        const actionName = act.name;
-
-        if (contractName === 'eosio.token' && actionName === 'transfer') {
+    console.log(`New block ${block_num}`);
+    if (block_num !== lastBlock + 1) {
+      console.log(`Out of order block ${block_num}. Last block ${lastBlock}`);
+      if (prevTraces[block_num]) {
+        console.log('Already seen this block');
+        if (JSON.stringify(prevTraces[block_num]) !== JSON.stringify(traces)) {
           console.log(
-            `${block_num} ${contractName}::${actionName} ${act.data.from} -> ${act.data.to} ${act.data.quantity}`
-          );
-        } else if (contractName === 'bridge.wax' && actionName === 'reqwaxtoeth') {
-          console.log(`${block_num} ${contractName}::${actionName} ${act.data}`);
-        } else if (contractName === 'bridge.wax' && actionName === 'reqnft') {
-          console.log(`${block_num} ${contractName}::${actionName} ${act.data}`);
-        } else if (contractName === 'bridge.wax' && actionName === 'nft2wax') {
-          console.log(`${block_num} ${contractName}::${actionName} ${act.data.to_account}`);
-        } else if (contractName === 'returnvalue') {
-          console.log(
-            `${block_num} ${contractName}::${actionName} return value ${JSON.stringify(
-              actionTraceData.return_value
-            )}`
+            'Traces are different',
+            JSON.stringify(prevTraces[block_num], undefined, 2),
+            JSON.stringify(traces, undefined, 2)
           );
         }
-      });
-    });
+      } else {
+        console.log('Skipped at least a block');
+      }
+    }
+    lastBlock = block_num;
+    prevTraces[block_num] = traces;
+    // blockCount++;
+    //
+    // traces.forEach(([_traceVersion, traceData]) => {
+    //   const action_traces = traceData.action_traces;
+    //   action_traces.forEach(([_actionTraceVersion, actionTraceData]) => {
+    //     const act = actionTraceData.act;
+    //     const contractName = act.account;
+    //     const actionName = act.name;
+    //
+    //     if (contractName === 'eosio.token' && actionName === 'transfer') {
+    //       console.log(
+    //         `${block_num} ${contractName}::${actionName} ${act.data.from} -> ${act.data.to} ${act.data.quantity}`
+    //       );
+    //     } else if (contractName === 'bridge.wax' && actionName === 'reqwaxtoeth') {
+    //       console.log(`${block_num} ${contractName}::${actionName} ${act.data}`);
+    //     } else if (contractName === 'bridge.wax' && actionName === 'reqnft') {
+    //       console.log(`${block_num} ${contractName}::${actionName} ${act.data}`);
+    //     } else if (contractName === 'bridge.wax' && actionName === 'nft2wax') {
+    //       console.log(`${block_num} ${contractName}::${actionName} ${act.data.to_account}`);
+    //     } else if (contractName === 'returnvalue') {
+    //       console.log(
+    //         `${block_num} ${contractName}::${actionName} return value ${JSON.stringify(
+    //           actionTraceData.return_value
+    //         )}`
+    //       );
+    //     }
+    //   });
+    // });
   },
 });
 
