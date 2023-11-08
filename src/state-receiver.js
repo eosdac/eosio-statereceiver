@@ -106,10 +106,10 @@ class StateReceiver {
     this.logger.info(`==== Starting the receiver.`);
 
     if (this.processingMessageData == true) {
-      this.logger.info("Wait for processingMessageData to finish!");
+      this.logger.info('Wait for processingMessageData to finish!');
       let start = this.start.bind(this);
       setTimeout(start, 1000);
-      return;  
+      return;
     }
     this.init();
 
@@ -253,7 +253,7 @@ class StateReceiver {
       return;
     }
     this.processCount += 1;
-    this.logger.info("Enter processMessageData", this.processCount, this.processingMessageData);
+    this.logger.info('Enter processMessageData', this.processCount, this.processingMessageData);
     this.processingMessageData = true;
 
     // this.logger.debug(`Processing message data...`);
@@ -300,7 +300,7 @@ class StateReceiver {
       this._onError(err);
     } finally {
       this.processingMessageData = false;
-      this.logger.info("Exit processMessageData", this.processCount);
+      this.logger.info('Exit processMessageData', this.processCount);
     }
     // this.logger.debug(`Processing message data stop.`);
   }
