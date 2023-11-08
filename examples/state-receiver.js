@@ -7,7 +7,7 @@ const sr = new StateReceiver({
     warn: (...m) => console.warn(...m),
     error: (...m) => console.error(...m),
   },
-  startBlock: 3,
+  startBlock: 30000,
   socketAddresses: [process.env.SOCKET_ADDRESS || 'ws://localhost:8080'],
   eosEndpoint: process.env.EOS_ENDPOINT || 'http://localhost:8888',
   deserializerActions: [
@@ -47,18 +47,18 @@ sr.registerTraceHandler({
     console.log(`New block ${block_num}`);
     if (block_num !== lastBlock + 1) {
       console.log(`Out of order block ${block_num}. Last block ${lastBlock}`);
-      if (prevTraces[block_num]) {
-        console.log('Already seen this block');
-        if (JSON.stringify(prevTraces[block_num]) !== JSON.stringify(traces)) {
-          console.log(
-            'Traces are different',
-            JSON.stringify(prevTraces[block_num], undefined, 2),
-            JSON.stringify(traces, undefined, 2)
-          );
-        }
-      } else {
-        console.log('Skipped at least a block');
+    }
+    if (prevTraces[block_num]) {
+      console.log('Already seen this block');
+      if (JSON.stringify(prevTraces[block_num]) !== JSON.stringify(traces)) {
+        console.log(
+          'Traces are different',
+          JSON.stringify(prevTraces[block_num], undefined, 2),
+          JSON.stringify(traces, undefined, 2)
+        );
       }
+    } else {
+      console.log('Skipped at least a block');
     }
     lastBlock = block_num;
     prevTraces[block_num] = traces;

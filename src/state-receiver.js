@@ -78,6 +78,7 @@ class StateReceiver {
     this.endBlock = config.endBlock || '0xffffffff';
     this.current_block = -1;
     this.types = null;
+    this.processingMessageData = false;
     this.init();
 
     if (!config.eosApi) {
@@ -86,12 +87,13 @@ class StateReceiver {
     } else {
       this.eosApi = config.eosApi;
     }
+    this.processCount = 0;
   }
 
   init() {
     this.pauseAck = false;
     this.serializedMessageQueue = [];
-    this.processingMessageData = false;
+    // this.processingMessageData = false;
 
     /**
      * This needs to be reset so that the message handler know that
@@ -102,6 +104,13 @@ class StateReceiver {
 
   start() {
     this.logger.info(`==== Starting the receiver.`);
+
+    if (this.processingMessageData == true) {
+      this.logger.info("Wait for processingMessageData to finish!");
+      let start = this.start.bind(this);
+      setTimeout(start, 1000);
+      return;  
+    }
     this.init();
 
     if (this.connection) {
@@ -243,6 +252,8 @@ class StateReceiver {
     if (this.processingMessageData) {
       return;
     }
+    this.processCount += 1;
+    this.logger.info("Enter processMessageData", this.processCount, this.processingMessageData);
     this.processingMessageData = true;
 
     // this.logger.debug(`Processing message data...`);
@@ -289,6 +300,7 @@ class StateReceiver {
       this._onError(err);
     } finally {
       this.processingMessageData = false;
+      this.logger.info("Exit processMessageData", this.processCount);
     }
     // this.logger.debug(`Processing message data stop.`);
   }
